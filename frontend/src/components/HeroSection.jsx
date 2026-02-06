@@ -84,15 +84,6 @@ export default function HeroSection() {
         <div className="w-1 h-12 rounded-full bg-gradient-to-b from-blue-500 to-transparent"></div>
       </div>
 
-      <style jsx>{`
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(-5%); }
-          50% { transform: translateY(0); }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 3s ease-in-out infinite;
-        }
-      `}</style>
     </section>
   );
 }

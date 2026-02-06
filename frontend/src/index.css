@@ -222,7 +222,12 @@ textarea::placeholder {
 }
 
 /* Force dark options in select dropdowns even if select itself is transparent */
-select option {
-  background-color: #0f172a;
-  color: white;
+
+/* Scoped Animations previously in components */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(-5%); }
+  50% { transform: translateY(0); }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
 }

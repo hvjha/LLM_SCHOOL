@@ -234,11 +234,6 @@ export default function Auth() {
                 </>
               )}
             </button>
-            <style jsx>{`
-            button:active {
-                transform: scale(0.98);
-            }
-            `}</style>
 
             <div className="text-center">
               <button
