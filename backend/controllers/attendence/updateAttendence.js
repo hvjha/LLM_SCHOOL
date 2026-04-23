@@ -1,6 +1,15 @@
 import Attendance from "../../models/attendence/attendence.js";
+
 export const updateAttendance = async (req, res) => {
   try {
+    // ── Role Guard ── only superadmin may edit records
+    if (!req.user || req.user.role !== "superadmin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Only administrators can update attendance records",
+      });
+    }
+
     const { attendanceId } = req.params;
     const { status } = req.body;
 

@@ -1,6 +1,11 @@
 import Attendance from "../../models/attendence/attendence.js";
 import userModel from "../../models/user/userModel.js";
 
+/**
+ * Returns true for Saturday (6) or Sunday (0) — non-working days.
+ */
+const isWeekend = (utcDayOfWeek) => utcDayOfWeek === 0 || utcDayOfWeek === 6;
+
 export const getStudentAttendance = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -13,13 +18,15 @@ export const getStudentAttendance = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // Generate all workdays (Mon-Sat) for the requested period
+    // Generate all workdays (Mon–Fri) for the requested period
     const now = new Date();
     let startDate, endDate;
 
     if (month && year) {
       startDate = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, 1));
-      endDate = new Date(Date.UTC(parseInt(year), parseInt(month), 0, 23, 59, 59, 999));
+      endDate = new Date(
+        Date.UTC(parseInt(year), parseInt(month), 0, 23, 59, 59, 999)
+      );
     } else {
       // Default to last 30 days if no period provided
       startDate = new Date();
@@ -29,7 +36,7 @@ export const getStudentAttendance = async (req, res) => {
 
     // Limit endDate to today
     const effectiveEndDate = endDate > now ? now : endDate;
-    
+
     // Build query for actual database records
     const query = { student: student._id };
     if (courseId) query.course = courseId;
@@ -44,19 +51,22 @@ export const getStudentAttendance = async (req, res) => {
       .sort({ date: -1 });
 
     // Create a Set of existing record dates for O(1) lookup
-    const recordDates = new Set(attendance.map(a => new Date(a.date).toISOString().split('T')[0]));
+    const recordDates = new Set(
+      attendance.map((a) => new Date(a.date).toISOString().split("T")[0])
+    );
 
     let implicitAbsents = 0;
     let totalWorkDaysCount = 0;
 
     let current = new Date(startDate);
-    current.setHours(0, 0, 0, 0);
+    current.setUTCHours(0, 0, 0, 0);
 
     while (current <= effectiveEndDate) {
       const dayOfWeek = current.getUTCDay();
-      const dateStr = current.toISOString().split('T')[0];
+      const dateStr = current.toISOString().split("T")[0];
 
-      if (dayOfWeek !== 0) { // Not Sunday
+      // Count Monday–Friday only (exclude Saturday=6 and Sunday=0)
+      if (!isWeekend(dayOfWeek)) {
         totalWorkDaysCount++;
         if (!recordDates.has(dateStr)) {
           implicitAbsents++;
@@ -67,12 +77,16 @@ export const getStudentAttendance = async (req, res) => {
 
     // Calculate overall stats
     const presentDays = attendance.filter((a) => a.status === "present").length;
-    const explicitAbsentDays = attendance.filter((a) => a.status === "absent").length;
+    const explicitAbsentDays = attendance.filter(
+      (a) => a.status === "absent"
+    ).length;
     const totalAbsentDays = explicitAbsentDays + implicitAbsents;
     const totalDaysConsidered = presentDays + totalAbsentDays;
 
     const attendancePercentage =
-      totalDaysConsidered > 0 ? ((presentDays / totalDaysConsidered) * 100).toFixed(2) : 0;
+      totalDaysConsidered > 0
+        ? ((presentDays / totalDaysConsidered) * 100).toFixed(2)
+        : 0;
 
     return res.status(200).json({
       student: {
@@ -83,7 +97,7 @@ export const getStudentAttendance = async (req, res) => {
         studentId: student.studentId,
       },
       attendance,
-      implicitAbsents, // Sending this for frontend awareness
+      implicitAbsents,
       stats: {
         totalDays: totalDaysConsidered,
         presentDays,

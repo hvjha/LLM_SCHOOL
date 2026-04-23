@@ -3,13 +3,30 @@ import courseModel from "../../models/course/courseModel.js";
 import userModel from "../../models/user/userModel.js";
 
 const normalizeDate = (dateString) => {
-  const date = new Date(dateString + 'T00:00:00.000Z');
+  const date = new Date(dateString + "T00:00:00.000Z");
   return date;
 };
 
-// Mark Attendance
+/**
+ * Returns true if the given UTC date falls on a weekend (Saturday=6 or Sunday=0).
+ */
+const isWeekend = (date) => {
+  const day = date.getUTCDay();
+  return day === 0 || day === 6; // 0 = Sunday, 6 = Saturday
+};
+
+// Mark Attendance — Trainers & Superadmin only
 export const markAttendance = async (req, res) => {
   try {
+    // ── Role Guard ────────────────────────────────────────────────────────────
+    const allowedRoles = ["trainer", "superadmin"];
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Only trainers and admins can mark attendance",
+      });
+    }
+
     const { studentId, courseId, date, status } = req.body;
 
     if (!studentId || !courseId || !date) {
@@ -35,18 +52,19 @@ export const markAttendance = async (req, res) => {
 
     // Normalize date to UTC midnight
     const attendanceDate = normalizeDate(date);
-    
-    // Check if date is Sunday (0 = Sunday in UTC)
-    if (attendanceDate.getUTCDay() === 0) {
+
+    // ── Working Day Check (Monday–Friday only) ────────────────────────────────
+    if (isWeekend(attendanceDate)) {
       return res.status(400).json({
         success: false,
-        message: "Attendance cannot be marked on Sunday",
+        message:
+          "Attendance cannot be marked on weekends (Saturday / Sunday). Working days are Monday to Friday.",
       });
     }
 
-    // Check if date is in the future
+    // ── Future Date Check ─────────────────────────────────────────────────────
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
     if (attendanceDate > today) {
       return res.status(400).json({
         success: false,
@@ -54,7 +72,20 @@ export const markAttendance = async (req, res) => {
       });
     }
 
-    // Prevent duplicate attendance for the same date
+    // ── Trainer Course Ownership Check ────────────────────────────────────────
+    // Trainers can only mark attendance for courses they own
+    if (req.user.role === "trainer") {
+      const isOwner =
+        course.trainer?.toString() === req.user._id.toString();
+      if (!isOwner) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You can only mark attendance for your own courses",
+        });
+      }
+    }
+
+    // ── Duplicate Check ───────────────────────────────────────────────────────
     const existing = await Attendance.findOne({
       course: course._id,
       student: student._id,
@@ -67,7 +98,7 @@ export const markAttendance = async (req, res) => {
       });
     }
 
-    // Create attendance
+    // ── Create Attendance Record ──────────────────────────────────────────────
     const attendance = await Attendance.create({
       course: course._id,
       student: student._id,
@@ -78,9 +109,9 @@ export const markAttendance = async (req, res) => {
 
     // Populate for response
     await attendance.populate([
-      { path: 'course', select: 'name courseId' },
-      { path: 'student', select: 'name studentId email' },
-      { path: 'markedBy', select: 'name trainerId' }
+      { path: "course", select: "name courseId" },
+      { path: "student", select: "name studentId email" },
+      { path: "markedBy", select: "name trainerId" },
     ]);
 
     return res.status(201).json({
