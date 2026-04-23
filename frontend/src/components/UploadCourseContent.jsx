@@ -249,7 +249,8 @@ export default function UploadCourseContent() {
       formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'school_uploads');
       formData.append('folder', 'school_management_uploads');
 
-      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/dghffr4t1/auto/upload`;
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
 
       const xhr = new XMLHttpRequest();
       
