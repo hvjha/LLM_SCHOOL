@@ -6,6 +6,7 @@ import api from "../api/api";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { RxAvatar } from "react-icons/rx";
+import { IoClose } from "react-icons/io5";
 
 export default function StudentAttendance() {
   const [searchParams] = useSearchParams();
@@ -64,7 +65,9 @@ export default function StudentAttendance() {
     }
   };
 
-  // Get all days of the month including Sundays for proper calendar display
+  // Get all days of the month. Saturday (6) and Sunday (0) are REST days.
+  const isWeekendDay = (jsDay) => jsDay === 0 || jsDay === 6;
+
   const getMonthDays = () => {
     const year = selectedMonth.getFullYear();
     const month = selectedMonth.getMonth();
@@ -85,9 +88,10 @@ export default function StudentAttendance() {
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const date = new Date(year, month, d);
       const dayOfWeek = date.getDay();
-      
-      if (dayOfWeek === 0) {
-        days.push({ type: 'sunday', date });
+
+      // Saturday (6) and Sunday (0) are both REST days
+      if (isWeekendDay(dayOfWeek)) {
+        days.push({ type: 'weekend', date });
       } else {
         days.push({ type: 'workday', date });
       }
@@ -165,7 +169,8 @@ export default function StudentAttendance() {
     while (current <= effectiveEndDate) {
       const dayOfWeek = current.getDay();
       const dateStr = current.toISOString().split('T')[0];
-      if (dayOfWeek !== 0 && !recordDates.has(dateStr)) {
+      // Only Mon–Fri count as working days (exclude Sat=6 and Sun=0)
+      if (dayOfWeek !== 0 && dayOfWeek !== 6 && !recordDates.has(dateStr)) {
         implicitAbsents++;
       }
       current.setDate(current.getDate() + 1);
@@ -412,12 +417,17 @@ export default function StudentAttendance() {
                   {/* Calendar Grid */}
                   <div className="grid grid-cols-7 gap-3">
                     {/* Day Headers */}
-                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => (
                       <div
                         key={day}
-                        className="text-center font-black text-[10px] text-slate-500 uppercase tracking-widest p-2"
+                        className={`text-center font-black text-[10px] uppercase tracking-widest p-2 ${
+                          i >= 5 ? "text-slate-700" : "text-slate-500"
+                        }`}
                       >
                         {day}
+                        {i >= 5 && (
+                          <div className="text-[8px] text-slate-800 font-bold">rest</div>
+                        )}
                       </div>
                     ))}
 
@@ -427,17 +437,19 @@ export default function StudentAttendance() {
                         return <div key={`empty-${index}`} className="p-4"></div>;
                       }
 
-                      if (dayObj.type === 'sunday') {
+                      // Saturday AND Sunday are both REST days
+                      if (dayObj.type === 'weekend') {
+                        const isSat = dayObj.date.getDay() === 6;
                         return (
                           <div
-                            key={`sunday-${dayObj.date.toISOString()}`}
-                            className="p-4 rounded-2xl text-center bg-white/5 border border-white/5 opacity-40"
+                            key={`weekend-${dayObj.date.toISOString()}`}
+                            className="p-4 rounded-2xl text-center bg-white/[0.02] border border-white/[0.03] opacity-30"
                           >
-                            <div className="text-xs font-black text-slate-500">
+                            <div className="text-xs font-black text-slate-600">
                               {dayObj.date.getDate()}
                             </div>
-                            <div className="text-[8px] mt-1 font-black text-slate-600 uppercase tracking-tighter">
-                              REST
+                            <div className="text-[8px] mt-1 font-black text-slate-700 uppercase tracking-tighter">
+                              {isSat ? "SAT" : "SUN"}
                             </div>
                           </div>
                         );
@@ -449,7 +461,9 @@ export default function StudentAttendance() {
                       const isAbsent = record?.status === "absent";
                       const isToday = date.toDateString() === new Date().toDateString();
                       
-                      const isWorkday = date.getDay() !== 0; 
+                      // A working day is Mon–Fri only
+                      const dow = date.getDay();
+                      const isWorkday = dow !== 0 && dow !== 6;
                       const isPastOrToday = date <= new Date();
                       const isImplicitAbsent = !record && isWorkday && isPastOrToday;
 
@@ -497,9 +511,9 @@ export default function StudentAttendance() {
                       <div className="w-4 h-4 bg-slate-900 border border-red-900/40 rounded opacity-50"></div>
                       <span>Auto Absent (Workday)</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <div className="w-4 h-4 bg-white/5 border border-white/5 rounded opacity-40"></div>
-                      <span>Sunday / Rest Day</span>
+                    <div className="flex items-center gap-2 text-slate-700">
+                      <div className="w-4 h-4 bg-white/[0.02] border border-white/[0.03] rounded opacity-30"></div>
+                      <span>Weekend — Sat &amp; Sun (No Class)</span>
                     </div>
                   </div>
                 </div>

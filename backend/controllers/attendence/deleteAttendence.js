@@ -2,6 +2,14 @@ import Attendance from "../../models/attendence/attendence.js";
 
 export const deleteAttendance = async (req, res) => {
   try {
+    // ── Role Guard ── only superadmin may delete records
+    if (!req.user || req.user.role !== "superadmin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Only administrators can delete attendance records",
+      });
+    }
+
     const { attendanceId } = req.params;
 
     const attendance = await Attendance.findByIdAndDelete(attendanceId);

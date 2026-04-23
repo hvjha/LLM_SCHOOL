@@ -20,6 +20,13 @@ export default function TrainerDashboard() {
   const [attendanceDate, setAttendanceDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [weekendError, setWeekendError] = useState("");
+
+  // Working days: Monday–Friday only
+  const isWeekend = (dateStr) => {
+    const day = new Date(dateStr + "T00:00:00").getDay();
+    return day === 0 || day === 6; // 0 = Sunday, 6 = Saturday
+  };
 
   useEffect(() => {
     fetchCourses();
@@ -52,6 +59,13 @@ export default function TrainerDashboard() {
     try {
       if (!attendanceModalData) return;
 
+      // ── Weekend Guard ──────────────────────────────────────────────────────
+      if (isWeekend(attendanceDate)) {
+        setWeekendError("❌ Cannot mark attendance on weekends (Sat/Sun). Working days: Mon–Fri only.");
+        return;
+      }
+      setWeekendError("");
+
       const { student, course } = attendanceModalData;
 
       const payload = {
@@ -64,6 +78,7 @@ export default function TrainerDashboard() {
       const res = await api.post("/api/attendance/mark", payload);
       toast.success(res.data.message || "Attendance marked successfully!");
       setAttendanceModalData(null);
+      setWeekendError("");
       setAttendanceDate(new Date().toISOString().split("T")[0]);
     } catch (err) {
       console.error("Mark attendance error:", err.response?.data || err);
@@ -262,55 +277,70 @@ export default function TrainerDashboard() {
 
         {/* Attendance Modal */}
         {attendanceModalData && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="glass-card w-96 rounded shadow-lg p-6 relative">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="glass-card w-full max-w-md rounded-3xl shadow-2xl p-8 relative border border-white/10 robust-inset">
               <button
-                className="absolute top-3 right-3 text-slate-400 hover:text-white text-xl"
-                onClick={() => setAttendanceModalData(null)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-red-600/20 transition-all text-lg"
+                onClick={() => { setAttendanceModalData(null); setWeekendError(""); }}
               >
                 ✕
               </button>
 
-              <h3 className="font-bold text-xl text-center mb-4">
+              <h3 className="font-black text-xl text-white text-center mb-1 uppercase tracking-wider">
                 Mark Attendance
               </h3>
+              <p className="text-center text-[10px] font-black text-red-500 uppercase tracking-widest mb-6">
+                Working Days: Monday – Friday Only
+              </p>
 
-              <div className="bg-white/5 p-4 rounded mb-4">
-                <p className="text-sm text-slate-300">Student:</p>
-                <p className="font-semibold">
-                  {attendanceModalData.student.name}
-                </p>
-                <p className="text-xs text-slate-400">
-                  ({attendanceModalData.student.studentId})
-                </p>
-
-                <p className="text-sm text-slate-300 mt-3">Course:</p>
-                <p className="font-semibold">
-                  {attendanceModalData.course.name}
-                </p>
-                <p className="text-xs text-slate-400">
-                  ({attendanceModalData.course.courseId})
-                </p>
+              <div className="bg-white/5 border border-white/10 p-5 rounded-2xl mb-5 space-y-1">
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Student</p>
+                  <p className="font-black text-white">{attendanceModalData.student.name}</p>
+                  <p className="text-xs text-slate-400 font-mono">{attendanceModalData.student.studentId}</p>
+                </div>
+                <div className="pt-2 border-t border-white/5 mt-2">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Course</p>
+                  <p className="font-black text-white">{attendanceModalData.course.name}</p>
+                  <p className="text-xs text-slate-400 font-mono">{attendanceModalData.course.courseId}</p>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Select Date:</label>
+              <div className="flex flex-col gap-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Date</label>
                 <input
                   type="date"
                   value={attendanceDate}
                   max={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => setAttendanceDate(e.target.value)}
-                  className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => {
+                    setAttendanceDate(e.target.value);
+                    if (isWeekend(e.target.value)) {
+                      setWeekendError("Cannot mark attendance on weekends. Working days are Monday to Friday.");
+                    } else {
+                      setWeekendError("");
+                    }
+                  }}
+                  className={`border p-3 rounded-xl focus:outline-none font-bold ${
+                    weekendError
+                      ? "border-orange-500/60 bg-orange-500/5"
+                      : "border-white/10 bg-white/5"
+                  }`}
                 />
+                {weekendError && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-orange-500/10 border border-orange-500/30">
+                    <span className="text-orange-400 text-xs font-black">⚠ {weekendError}</span>
+                  </div>
+                )}
                 <button
                   onClick={markAttendance}
-                  className="bg-green-600 text-white px-4 py-2 rounded mt-2 hover:bg-green-700 font-medium"
+                  disabled={!!weekendError}
+                  className="bg-red-600 text-white px-4 py-3 rounded-2xl mt-1 hover:bg-red-700 font-black uppercase tracking-widest text-xs shadow-lg shadow-red-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Mark Present
+                  Confirm Present
                 </button>
                 <button
-                  onClick={() => setAttendanceModalData(null)}
-                  className="bg-white/10 text-white px-4 py-2 rounded hover:bg-white/20"
+                  onClick={() => { setAttendanceModalData(null); setWeekendError(""); }}
+                  className="bg-white/5 text-slate-400 px-4 py-3 rounded-2xl hover:bg-white/10 hover:text-white transition-all font-black text-xs uppercase tracking-widest border border-white/5"
                 >
                   Cancel
                 </button>
