@@ -1,28 +1,36 @@
-
 import { useState } from "react";
 import api from "../api/api";
 import { toast } from "react-toastify";
 import uploadFile from "../helper/UploadFile";
 import { IoClose } from "react-icons/io5";
+import { FaBookOpen, FaLayerGroup, FaPlus, FaCloudUploadAlt, FaChevronDown, FaCheck, FaCheckCircle } from "react-icons/fa";
 
 export default function CreateCourse({ trainers, onCourseCreated }) {
   const [formCourse, setFormCourse] = useState({ trainers: [] });
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [uploadPhoto, setUploadPhoto] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Upload Course Thumbnail
   const handleUploadPhoto = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const uploaded = await uploadFile(file);
-
-    setUploadPhoto(file);
-
-    setFormCourse((prev) => ({
-      ...prev,
-      course_img: uploaded?.secure_url,
-    }));
+    try {
+      setIsUploading(true);
+      const uploaded = await uploadFile(file);
+      setUploadPhoto(file);
+      setFormCourse((prev) => ({
+        ...prev,
+        course_img: uploaded?.secure_url,
+      }));
+      toast.success("Intelligence asset synchronized");
+    } catch (err) {
+      toast.error("Upload failure: Check connection");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Clear uploaded image
@@ -36,6 +44,7 @@ export default function CreateCourse({ trainers, onCourseCreated }) {
   const createCourse = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       await api.post("/api/course/course-create", {
         courseId: formCourse.courseId,
         name: formCourse.name,
@@ -44,7 +53,7 @@ export default function CreateCourse({ trainers, onCourseCreated }) {
         course_img: formCourse.course_img || "", 
       });
 
-      toast.success("Course created");
+      toast.success("New curriculum deployed to grid");
 
       // reset form
       setFormCourse({ trainers: [] });
@@ -52,7 +61,9 @@ export default function CreateCourse({ trainers, onCourseCreated }) {
 
       if (onCourseCreated) onCourseCreated();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Error creating course");
+      toast.error(err?.response?.data?.message || "Protocol rejection: Deployment failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -72,133 +83,166 @@ export default function CreateCourse({ trainers, onCourseCreated }) {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[80vh] p-4 animate-in fade-in duration-500">
-      <div className="glass-card p-8 rounded-[2.5rem] shadow-2xl w-full max-w-3xl border border-white/10 robust-inset relative overflow-hidden">
+    <div className="flex justify-center items-center py-12 animate-fade-in-up">
+      <div className="bg-white p-12 md:p-20 rounded-[4rem] border border-slate-100 shadow-[0_50px_150px_rgba(0,0,0,0.08)] w-full max-w-4xl relative overflow-hidden">
         
-        <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/10 rounded-full blur-2xl -mt-10 -mr-10"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl -mb-10 -ml-10"></div>
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/5 rounded-full blur-[100px] -mt-40 -mr-40 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-slate-900/5 rounded-full blur-[100px] -mb-40 -ml-40 pointer-events-none"></div>
 
-        <h2 className="text-3xl font-black text-white mb-8 text-center uppercase italic tracking-tighter text-shadow-red relative z-10">
-          Create New Course
-        </h2>
+        <div className="text-center mb-16 relative z-10">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-slate-50 rounded-[2.5rem] mb-8 text-slate-900 shadow-inner border border-slate-100 group">
+            <FaBookOpen size={36} className="group-hover:rotate-12 transition-transform duration-700"/>
+          </div>
+          <h2 className="text-5xl font-black text-slate-900 uppercase italic tracking-tight leading-none">Track Engineering</h2>
+          <p className="text-slate-500 font-medium mt-4 uppercase tracking-[0.3em] text-[10px] italic">Architect new educational protocols and assign lead faculty.</p>
+        </div>
 
-        <form onSubmit={createCourse} className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+        <form onSubmit={createCourse} className="space-y-12 relative z-10">
           
-          <div className="space-y-1">
-             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Course ID</label>
-             <input
-              className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-red-600 transition-all outline-none focus:bg-white/10"
-              placeholder="e.g. DSA-101"
-              value={formCourse.courseId || ""}
-              onChange={(e) =>
-                setFormCourse({ ...formCourse, courseId: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="space-y-1">
-             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Course Name</label>
-             <input
-              className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-red-600 transition-all outline-none focus:bg-white/10"
-              placeholder="Course Name"
-              value={formCourse.name || ""}
-              onChange={(e) =>
-                setFormCourse({ ...formCourse, name: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="space-y-1">
-             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Price</label>
-             <input
-              className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-red-600 transition-all outline-none focus:bg-white/10"
-              placeholder="Price"
-              value={formCourse.price || ""}
-              onChange={(e) =>
-                setFormCourse({ ...formCourse, price: e.target.value })
-              }
-            />
-          </div>
-
-          {/* Course Image Upload */}
-          <div className="col-span-1 md:col-span-2 space-y-1">
-             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Mission Thumbnail</label>
-            <label htmlFor="course_img" className="block cursor-pointer group">
-              <div className={`h-24 bg-white/5 flex items-center justify-between px-6 rounded-2xl border border-white/10 group-hover:border-red-600/50 transition-all ${uploadPhoto ? 'border-red-600 bg-red-600/5' : ''}`}>
-                 <div className="flex items-center gap-4">
-                    {uploadPhoto ? (
-                        <div className="w-16 h-16 rounded-xl bg-cover bg-center shadow-lg border border-red-500/30" style={{ backgroundImage: `url(${formCourse.course_img})` }}></div>
-                    ) : (
-                        <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center">
-                            <span className="text-2xl text-slate-600 group-hover:text-red-500 transition-colors">IMG</span>
-                        </div>
-                    )}
-                    <span className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors uppercase italic">
-                      {uploadPhoto?.name || "Upload Visual Asset"}
-                    </span>
-                 </div>
-
-                {uploadPhoto?.name && (
-                  <button onClick={clearUploadedPhoto} className="text-white bg-red-600 p-2 rounded-full hover:bg-red-700 transition-all shadow-lg">
-                    <IoClose />
-                  </button>
-                )}
-              </div>
-            </label>
-
-            <input
-              id="course_img"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleUploadPhoto}
-            />
-          </div>
-
-          {/* Dropdown for Trainers */}
-          <div className="relative col-span-1 md:col-span-2 space-y-1">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Assigned Commanders</label>
-            <div
-              className="p-4 bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:bg-white/10 transition-all group"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              <div className="flex justify-between items-center">
-                  <span className={`font-bold ${formCourse.trainers.length > 0 ? 'text-white' : 'text-slate-500'}`}>
-                    {formCourse.trainers.length > 0
-                        ? `${formCourse.trainers.length} Commanders Selected`
-                        : "Select Personnel"}
-                  </span>
-                  <span className="text-slate-500 group-hover:text-red-500 transition-colors">▼</span>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+            <div className="space-y-3">
+               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8">Course Registry ID</label>
+               <input
+                className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-slate-900 font-bold focus:outline-none focus:ring-8 focus:ring-blue-100 transition-all placeholder:text-slate-300 italic"
+                placeholder="Ex: QUANTUM-701"
+                required
+                value={formCourse.courseId || ""}
+                onChange={(e) => setFormCourse({ ...formCourse, courseId: e.target.value })}
+              />
             </div>
 
-            {dropdownOpen && (
-              <div className="absolute left-0 right-0 mt-2 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl max-h-48 overflow-y-auto z-50 p-3 no-scrollbar glass-card">
-                {trainers?.map((t) => (
-                  <label
-                    key={t._id}
-                    className="flex items-center gap-3 p-3 cursor-pointer hover:bg-white/5 rounded-xl transition-all group"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formCourse.trainers.includes(t.trainerId)}
-                      onChange={() => handleTrainerSelect(t.trainerId)}
-                      className="accent-red-600 w-5 h-5 rounded hover:accent-red-500"
-                    />
-                    <div className="flex flex-col">
-                        <span className="text-sm font-black text-white group-hover:text-red-500 transition-colors uppercase italic">{t.name}</span>
-                        <span className="text-[10px] font-mono text-slate-500">{t.trainerId}</span>
+            <div className="space-y-3">
+               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8">Track Designation</label>
+               <input
+                className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-slate-900 font-bold focus:outline-none focus:ring-8 focus:ring-blue-100 transition-all placeholder:text-slate-300 italic"
+                placeholder="Curriculum Title"
+                required
+                value={formCourse.name || ""}
+                onChange={(e) => setFormCourse({ ...formCourse, name: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-3">
+               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8">Operational Cost (INR)</label>
+               <input
+                type="number"
+                className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-slate-900 font-bold focus:outline-none focus:ring-8 focus:ring-blue-100 transition-all placeholder:text-slate-300 italic"
+                placeholder="0.00"
+                required
+                value={formCourse.price || ""}
+                onChange={(e) => setFormCourse({ ...formCourse, price: e.target.value })}
+              />
+            </div>
+
+            {/* Course Image Upload */}
+            <div className="col-span-1 md:col-span-2 space-y-4 pt-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8 italic">Curriculum Visual Identity</label>
+              <label htmlFor="course_img" className="block cursor-pointer group">
+                <div className={`p-10 bg-slate-50 rounded-[3rem] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-6 ${uploadPhoto ? 'border-blue-600 bg-blue-50/50' : 'border-slate-100 hover:border-blue-600 hover:bg-white'}`}>
+                   {isUploading ? (
+                     <div className="flex flex-col items-center gap-4">
+                        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 italic">Processing Asset...</span>
+                     </div>
+                   ) : uploadPhoto ? (
+                      <div className="flex items-center gap-8 w-full p-2">
+                         <div className="w-32 h-32 rounded-[2rem] bg-cover bg-center shadow-2xl border-4 border-white" style={{ backgroundImage: `url(${formCourse.course_img})` }}></div>
+                         <div className="flex-1">
+                            <p className="text-sm font-black text-slate-900 uppercase italic truncate tracking-tight">{uploadPhoto.name}</p>
+                            <button onClick={clearUploadedPhoto} className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mt-3 hover:text-red-700 flex items-center gap-2">
+                               Purge Visual Asset
+                            </button>
+                         </div>
+                      </div>
+                   ) : (
+                      <>
+                        <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                           <FaCloudUploadAlt className="text-slate-300 group-hover:text-blue-600 transition-colors" size={40}/>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-black text-slate-400 group-hover:text-slate-900 transition-colors uppercase italic tracking-tight">Upload Intelligence Graphic</p>
+                          <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-2">Optimal dimensions: 1280x720 // High Resolution</p>
+                        </div>
+                      </>
+                   )}
+                </div>
+              </label>
+
+              <input
+                id="course_img"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleUploadPhoto}
+              />
+            </div>
+
+            {/* Dropdown for Trainers */}
+            <div className="relative col-span-1 md:col-span-2 space-y-4 pt-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8 italic">Faculty Command Deployment</label>
+              <div
+                className={`flex items-center justify-between px-10 py-6 bg-slate-50 border rounded-[2rem] cursor-pointer transition-all ${dropdownOpen ? 'border-blue-600 ring-8 ring-blue-100' : 'border-slate-100 hover:border-blue-300 hover:bg-white'}`}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                <div className="flex items-center gap-5">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formCourse.trainers.length > 0 ? 'bg-blue-600 text-white' : 'bg-white text-slate-300 shadow-sm'}`}>
+                       <FaLayerGroup size={16}/>
                     </div>
-                  </label>
-                ))}
+                    <span className={`text-[11px] font-black uppercase tracking-[0.2em] italic ${formCourse.trainers.length > 0 ? 'text-slate-900' : 'text-slate-400'}`}>
+                      {formCourse.trainers.length > 0
+                          ? `${formCourse.trainers.length} Faculty Members Deployed`
+                          : "Command Personnel Required"}
+                    </span>
+                </div>
+                <FaChevronDown className={`text-slate-300 transition-transform duration-500 ${dropdownOpen ? 'rotate-180 text-blue-600' : ''}`} size={14}/>
               </div>
-            )}
+
+              {dropdownOpen && (
+                <div className="absolute left-0 right-0 mt-4 bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.1)] max-h-72 overflow-y-auto z-50 p-6 no-scrollbar animate-scale-in origin-top">
+                  {trainers?.map((t) => (
+                    <label
+                      key={t._id}
+                      className={`flex items-center justify-between p-5 cursor-pointer rounded-2xl transition-all group mb-2 ${formCourse.trainers.includes(t.trainerId) ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+                    >
+                      <div className="flex flex-col">
+                          <span className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors uppercase italic tracking-tight">{t.name}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">RANK: FACULTY #{t.trainerId}</span>
+                      </div>
+                      <div className="relative flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formCourse.trainers.includes(t.trainerId)}
+                          onChange={() => handleTrainerSelect(t.trainerId)}
+                          className="peer appearance-none w-7 h-7 border-4 border-white bg-slate-100 rounded-xl checked:bg-blue-600 transition-all cursor-pointer shadow-sm"
+                        />
+                        <FaCheck className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" size={12}/>
+                      </div>
+                    </label>
+                  ))}
+                  {(!trainers || trainers.length === 0) && (
+                    <div className="py-12 text-center">
+                       <p className="text-[11px] font-black text-slate-300 uppercase italic tracking-[0.3em]">No faculty available in sector</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Submit */}
-          <button className="col-span-1 md:col-span-2 mt-4 py-4 bg-gradient-to-r from-red-600 to-red-800 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl shadow-red-600/20 hover:scale-[1.02] active:scale-95 transition-all border border-red-500/30">
-            Create Course
-          </button>
+          <div className="pt-6">
+            <button 
+              disabled={isSubmitting}
+              className="w-full py-7 bg-slate-900 text-white font-black uppercase tracking-[0.3em] text-[11px] rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 group"
+            >
+              {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <FaCheckCircle size={18} className="group-hover:scale-125 transition-transform" />
+              )}
+              {isSubmitting ? "Deploying Curriculum..." : "Commence Track Deployment"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../api/api";
 import { toast } from "react-toastify";
 import uploadFile from "../helper/UploadFile";
+import { FaUserTie, FaUserGraduate, FaEdit, FaTrashAlt, FaCloudUploadAlt, FaTimes, FaChevronLeft, FaChevronRight, FaFingerprint, FaBriefcase, FaEnvelope, FaPhone, FaCheckCircle, FaGlobe } from "react-icons/fa";
 
 export default function Trainers() {
   const [trainers, setTrainers] = useState([]);
@@ -9,19 +10,23 @@ export default function Trainers() {
   const [totalTrainers, setTotalTrainers] = useState(0);
   const [editingTrainer, setEditingTrainer] = useState(null);
   const [page, setPage] = useState(1);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const trainersPerPage = 5;
 
   // ------------------ LOAD TRAINERS ------------------
   const loadTrainers = async () => {
     try {
+      setLoading(true);
       const { data } = await api.get("/api/admin/user-details");
-
       setTrainers(data?.users?.trainers || []);
       setTotalStudents(data?.totalStudents || 0);
       setTotalTrainers(data?.totalTrainers || 0);
     } catch (err) {
-      toast.error("Failed to load trainers");
+      toast.error("Systems offline: Failed to synchronize faculty data");
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -31,33 +36,14 @@ export default function Trainers() {
 
   // ------------------ DELETE TRAINER ------------------
   const deleteTrainer = async (id) => {
-    if (!window.confirm("Delete trainer permanently?")) return;
+    if (!window.confirm("Confirm protocol: Permanent deletion of faculty record?")) return;
 
     try {
       await api.delete(`/api/admin/delete/${id}`);
-      toast.success("Trainer deleted");
+      toast.success("Personnel record expunged");
       loadTrainers();
     } catch (err) {
-      toast.error("Failed to delete trainer");
-    }
-  };
-
-  // ------------------ REMOVE TRAINER FROM A COURSE ------------------
-  const removeCourseFromTrainer = async (trainerId, courseId) => {
-    if (!window.confirm("Remove trainer from this course?")) return;
-
-    try {
-      await api.put(`/api/course/remove-trainer-from-course`, {
-        trainerId,
-        courseId,
-      });
-
-      toast.success("Trainer removed from course");
-      loadTrainers();
-    } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "Failed to remove trainer from course"
-      );
+      toast.error("Protocol failure: Deletion rejected");
     }
   };
 
@@ -66,198 +52,231 @@ export default function Trainers() {
     e.preventDefault();
 
     if (!editingTrainer.name || !editingTrainer.email) {
-      return toast.error("Name & Email required");
+      return toast.error("Identity metrics required (Name & Email)");
     }
 
     if (String(editingTrainer.phone).length !== 10) {
-      return toast.error("Phone must be 10 digits");
+      return toast.error("Communication vector must be 10 digits");
     }
 
     try {
-     await api.post(`/api/admin/update-user/${editingTrainer._id}`, {
-    name: editingTrainer.name,
-    email: editingTrainer.email,
-    phone: editingTrainer.phone,
-    experience: editingTrainer.experience,
-    company: editingTrainer.company,
-    profile_pic:editingTrainer.profile_pic
-});
+      setIsUpdating(true);
+      await api.post(`/api/admin/update-user/${editingTrainer._id}`, {
+          name: editingTrainer.name,
+          email: editingTrainer.email,
+          phone: editingTrainer.phone,
+          experience: editingTrainer.experience,
+          company: editingTrainer.company,
+          profile_pic: editingTrainer.profile_pic
+      });
 
-
-      toast.success("Trainer updated");
+      toast.success("Identity profile updated");
       setEditingTrainer(null);
       await loadTrainers();
     } catch (err) {
-      toast.error("Failed to update trainer");
+      toast.error("Systems error: Profile update failed");
+    } finally {
+      setIsUpdating(false);
     }
   };
-  // ------------------ PROFILE PHOTO UPLOAD ------------------
 
   // ------------------ PAGINATION ------------------
   const start = (page - 1) * trainersPerPage;
   const paginatedTrainers = trainers.slice(start, start + trainersPerPage);
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-32 opacity-30 animate-pulse">
+         <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-[2.5rem] animate-spin mb-8"></div>
+         <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-900 italic">Accessing Faculty Archives...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="lg:mt-0 mt-35 p-6 space-y-8 h-screen no-scrollbar overflow-y-auto">
-
+    <div className="space-y-20 animate-fade-in">
+      
       {/* -------------------------------- Overview Cards ------------------------------ */}
-      <div className="flex flex-col lg:flex-row gap-8 justify-center items-start mb-6">
-
-        <div className="flex flex-row lg:flex-col gap-6 w-full lg:w-auto justify-center">
-          <div className="glass-card p-8 rounded-[2.5rem] w-full lg:w-[220px] text-center border-b-4 border-red-600 robust-inset shadow-xl">
-            <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-3">Total Trainers</h2>
-            <p className="text-4xl font-black text-white">{totalTrainers}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        
+        <div className="lg:col-span-4 flex flex-col gap-8">
+          <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-[0_30px_100px_rgba(0,0,0,0.04)] flex flex-col items-center text-center group hover:border-blue-600 hover:shadow-[0_50px_150px_rgba(0,0,0,0.08)] transition-all duration-700 relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full blur-3xl -mt-10 -mr-10 group-hover:bg-blue-600/10 transition-colors"></div>
+             <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-900 mb-8 group-hover:scale-110 transition-transform duration-700 shadow-inner relative z-10">
+                <FaFingerprint size={32}/>
+             </div>
+             <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 relative z-10 italic">Lead Faculty Nodes</h2>
+             <p className="text-6xl font-black text-slate-900 italic relative z-10">{totalTrainers}</p>
           </div>
 
-          <div className="glass-card p-8 rounded-[2.5rem] w-full lg:w-[220px] text-center border-b-4 border-red-900 robust-inset shadow-xl">
-            <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-3">Total Students</h2>
-            <p className="text-4xl font-black text-white">{totalStudents}</p>
+          <div className="bg-slate-900 p-12 rounded-[4rem] shadow-[0_30px_100px_rgba(0,0,0,0.2)] flex flex-col items-center text-center group hover:bg-blue-600 transition-all duration-700 relative overflow-hidden">
+             <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mb-10 -ml-10"></div>
+             <div className="w-20 h-20 bg-white/10 rounded-[2rem] flex items-center justify-center text-white mb-8 group-hover:scale-110 transition-transform duration-700 relative z-10">
+                <FaUserGraduate size={32}/>
+             </div>
+             <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 relative z-10 italic">Total Cadets</h2>
+             <p className="text-6xl font-black text-white italic relative z-10">{totalStudents}</p>
           </div>
         </div>
 
         {/* Students Per Trainer */}
-        <div className="glass-card rounded-[2.5rem] p-8 w-full max-w-2xl overflow-hidden border border-white/10 robust-inset shadow-2xl transition-all hover:border-red-600/30">
-          <h2 className="text-lg font-black text-white uppercase tracking-tighter mb-6 text-shadow-red italic border-l-4 border-red-600 pl-4">
-            Trainer Statistics
-          </h2>
+        <div className="lg:col-span-8 bg-white rounded-[4rem] p-12 border border-slate-100 shadow-[0_50px_150px_rgba(0,0,0,0.04)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-[100px] -mt-32 -mr-32 pointer-events-none"></div>
+          
+          <div className="flex items-center justify-between mb-12 relative z-10">
+             <div>
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic">Distribution Matrix</span>
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tight">Faculty Load Matrix</h2>
+                <p className="text-slate-500 text-xs font-medium mt-2 uppercase tracking-widest italic">Student assignment distribution across active mentors.</p>
+             </div>
+             <div className="flex gap-4">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all duration-500 disabled:opacity-20 disabled:cursor-not-allowed shadow-sm"
+                >
+                  <FaChevronLeft size={16}/>
+                </button>
+                <button
+                  disabled={start + trainersPerPage >= trainers.length}
+                  onClick={() => setPage(page + 1)}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all duration-500 disabled:opacity-20 disabled:cursor-not-allowed shadow-sm"
+                >
+                  <FaChevronRight size={16}/>
+                </button>
+             </div>
+          </div>
 
-          <div className="overflow-x-auto no-scrollbar">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    <th className="p-4 rounded-l-xl">Trainer</th>
-                    <th className="p-4 rounded-r-xl">Students Assigned</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-white/5">
+          <div className="overflow-hidden relative z-10">
+              <table className="w-full">
+                <tbody className="divide-y divide-slate-50">
                   {paginatedTrainers.map((t) => (
-                    <tr key={t._id} className="hover:bg-white/5 transition-colors group">
-                      <td className="p-4 text-white font-black text-sm group-hover:text-red-500 transition-colors uppercase italic">{t.name}</td>
-                      <td className="p-4">
-                        <span className="bg-red-600/20 text-red-500 px-3 py-1 rounded-full text-xs font-black">
-                          {t.teachingCourses?.reduce(
-                            (acc, c) => acc + (c.students?.length || 0),
-                            0
-                          )} STUDENTS
-                        </span>
+                    <tr key={t._id} className="group hover:bg-slate-50/50 transition-all duration-500">
+                      <td className="py-8 pr-6">
+                        <div className="flex items-center gap-6">
+                           <div className="w-16 h-16 rounded-[1.5rem] overflow-hidden border-4 border-white shadow-xl group-hover:border-blue-100 transition-all duration-500">
+                              {t.profile_pic ? (
+                                <img src={t.profile_pic} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"/>
+                              ) : (
+                                <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-200 font-black uppercase text-2xl italic">
+                                  {t.name[0]}
+                                </div>
+                              )}
+                           </div>
+                           <div>
+                              <p className="text-lg font-black text-slate-900 uppercase italic tracking-tight group-hover:text-blue-600 transition-colors">{t.name}</p>
+                              <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mt-1 italic">SECTOR CMD: {t.trainerId}</p>
+                           </div>
+                        </div>
+                      </td>
+                      <td className="py-8 text-right">
+                        <div className="inline-flex items-center gap-4 bg-white text-slate-900 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] border border-slate-100 group-hover:border-blue-100 group-hover:text-blue-600 transition-all shadow-sm">
+                          <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                          {t.teachingCourses?.reduce((acc, c) => acc + (c.students?.length || 0), 0)} Assigned Cadets
+                        </div>
                       </td>
                     </tr>
                   ))}
+                  {paginatedTrainers.length === 0 && (
+                    <tr>
+                      <td colSpan={2} className="py-24 text-center opacity-30 italic font-black text-slate-300 uppercase tracking-[0.4em]">Sector Empty: No faculty detected</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex gap-4 justify-end mt-8">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                page === 1 ? "bg-white/5 text-slate-600 opacity-20 border border-white/5" : "bg-red-600 text-white shadow-lg shadow-red-500/20 hover:bg-red-700"
-              }`}
-            >
-              Back
-            </button>
-
-            <button
-              disabled={start + trainersPerPage >= trainers.length}
-              onClick={() => setPage(page + 1)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                start + trainersPerPage >= trainers.length
-                  ? "bg-white/5 text-slate-600 opacity-20 border border-white/5"
-                  : "bg-red-600 text-white shadow-lg shadow-red-500/20 hover:bg-red-700"
-              }`}
-            >
-              Advance
-            </button>
           </div>
         </div>
       </div>
 
       {/* --------------------------------- Trainers Full Table ------------------------- */}
-      <div className="glass-card rounded-[2.5rem] p-8 overflow-hidden border border-white/10 robust-inset shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-700">
+      <div className="bg-white rounded-[4rem] p-12 border border-slate-100 shadow-[0_50px_150px_rgba(0,0,0,0.04)] relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-50/30 rounded-full blur-[120px] -mb-40 -ml-40 pointer-events-none"></div>
+        
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 relative z-10">
+           <div>
+              <div className="flex items-center gap-3 mb-3">
+                 <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-xl shadow-slate-900/10">
+                    <FaUserTie size={18}/>
+                 </div>
+                 <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] italic">Personnel Directory</span>
+              </div>
+              <h1 className="text-5xl font-black text-slate-900 uppercase italic tracking-tight leading-none">Faculty Archives</h1>
+              <p className="text-slate-500 font-medium mt-4 uppercase tracking-[0.2em] text-[10px] italic max-w-xl leading-relaxed">Audit and manage professional faculty curriculum assignments. Comprehensive neural sync monitoring active.</p>
+           </div>
+        </div>
 
-        <h1 className="text-3xl font-black text-white mb-8 text-center text-shadow-red uppercase italic tracking-tight">Active Trainers</h1>
-
-        <div className="overflow-x-auto no-scrollbar max-h-[45vh]">
+        <div className="overflow-x-auto no-scrollbar rounded-[2.5rem] border border-slate-50 relative z-10">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0f172a] z-10">
-                <tr className="bg-white/5 border-b border-white/5">
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Trainer</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">ID</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Course Name</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Course ID</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Students</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Actions</th>
+              <thead>
+                <tr className="bg-slate-900 text-white">
+                  <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.4em] italic">Personnel Node</th>
+                  <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.4em] italic">Designated Tracks</th>
+                  <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.4em] italic text-center">Cadet Load</th>
+                  <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.4em] italic text-right">Management</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-white/5">
-                {trainers.map((trainer) =>
-                  trainer.teachingCourses.length > 0 ? (
-                    trainer.teachingCourses.map((course, idx) => (
-                      <tr key={`${trainer._id}-${idx}`} className="hover:bg-white/5 transition-colors group">
-                        <td className="p-4">
-                            <div className="text-white font-black text-sm group-hover:text-red-500 transition-colors uppercase italic">{trainer.name}</div>
-                        </td>
-                        <td className="p-4 font-mono text-[10px] text-slate-500">{trainer.trainerId}</td>
-                        <td className="p-4 text-white font-bold text-xs uppercase">{course.name}</td>
-                        <td className="p-4 font-mono text-[10px] text-red-900/40 uppercase">{course.courseId}</td>
-                        <td className="p-4 text-center">
-                          <span className="bg-red-600/10 text-red-500 px-3 py-1 rounded-full text-[9px] font-black">
-                            {course.students?.length || 0} STUDENTS
-                          </span>
-                        </td>
-
-                        <td className="p-4 text-center">
-                            <div className="flex gap-2 justify-center">
-                                <button
-                                    className="px-3 py-1 bg-white/5 text-white rounded-lg text-[9px] font-black uppercase border border-white/5 hover:bg-red-600 transition-all"
-                                    onClick={() => setEditingTrainer(trainer)}
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className="px-3 py-1 bg-slate-900 text-slate-500 rounded-lg text-[9px] font-black uppercase hover:bg-red-600 hover:text-white transition-all"
-                                    onClick={() => deleteTrainer(trainer._id)}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr key={trainer._id} className="hover:bg-white/5 transition-colors group">
-                      <td className="p-4">
-                         <div className="text-white font-black text-sm uppercase italic">{trainer.name}</div>
-                      </td>
-                      <td className="p-4 font-mono text-[10px] text-slate-500">{trainer.trainerId}</td>
-
-                      <td className="p-4" colSpan={3}>
-                        <span className="text-slate-700 italic font-black uppercase text-[10px]">No courses assigned</span>
-                      </td>
-
-                      <td className="p-4 text-center">
-                         <div className="flex gap-2 justify-center">
+              <tbody className="divide-y divide-slate-100">
+                {trainers.map((trainer) => (
+                  <tr key={trainer._id} className="group hover:bg-slate-50 transition-all duration-500">
+                    <td className="px-10 py-10">
+                        <div className="flex items-center gap-8">
+                           <div className="w-20 h-20 rounded-[2.5rem] overflow-hidden border-8 border-slate-50 shadow-2xl group-hover:border-blue-100 transition-all duration-700 bg-white">
+                              {trainer.profile_pic ? (
+                                <img src={trainer.profile_pic} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"/>
+                              ) : (
+                                <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-200 font-black text-3xl uppercase italic">
+                                  {trainer.name[0]}
+                                </div>
+                              )}
+                           </div>
+                           <div>
+                              <div className="text-slate-900 font-black text-xl group-hover:text-blue-600 transition-colors uppercase italic tracking-tight leading-none">{trainer.name}</div>
+                              <div className="font-bold text-[9px] text-slate-300 mt-2 uppercase tracking-[0.3em] italic">{trainer.trainerId}</div>
+                           </div>
+                        </div>
+                    </td>
+                    <td className="px-10 py-10">
+                       <div className="flex flex-wrap gap-3">
+                          {trainer.teachingCourses.length > 0 ? (
+                            trainer.teachingCourses.map((course, idx) => (
+                              <span key={idx} className="bg-white text-slate-900 px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] border border-slate-100 group-hover:border-blue-100 transition-colors shadow-sm">
+                                {course.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-slate-200 italic text-[10px] font-black uppercase tracking-[0.4em]">Unassigned Sector</span>
+                          )}
+                       </div>
+                    </td>
+                    <td className="px-10 py-10 text-center">
+                      <div className="inline-block px-6 py-3 bg-white rounded-2xl border border-slate-100 shadow-sm group-hover:border-blue-100 transition-all">
+                         <span className="text-2xl font-black text-slate-900 group-hover:text-blue-600 transition-colors italic">{trainer.teachingCourses?.reduce((acc, c) => acc + (c.students?.length || 0), 0)}</span>
+                      </div>
+                    </td>
+                    <td className="px-10 py-10 text-right">
+                        <div className="flex gap-4 justify-end">
                             <button
-                              className="px-3 py-1 bg-white/5 text-white rounded-lg text-[9px] font-black uppercase border border-white/5 hover:bg-red-600 transition-all"
-                              onClick={() => setEditingTrainer(trainer)}
+                                className="w-14 h-14 bg-white text-slate-300 rounded-2xl flex items-center justify-center border border-slate-100 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm group/btn"
+                                onClick={() => setEditingTrainer(trainer)}
+                                title="Edit Identity"
                             >
-                              Edit
+                                <FaEdit size={18} className="group-hover/btn:rotate-12 transition-transform"/>
                             </button>
                             <button
-                              className="px-3 py-1 bg-slate-900 text-slate-500 rounded-lg text-[9px] font-black uppercase hover:bg-red-600 hover:text-white transition-all"
-                              onClick={() => deleteTrainer(trainer._id)}
+                                className="w-14 h-14 bg-white text-slate-300 rounded-2xl flex items-center justify-center border border-slate-100 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all shadow-sm group/btn"
+                                onClick={() => deleteTrainer(trainer._id)}
+                                title="Expunge Personnel"
                             >
-                              Delete
+                                <FaTrashAlt size={18} className="group-hover/btn:scale-110 transition-transform"/>
                             </button>
-                         </div>
-                      </td>
-                    </tr>
-                  )
-                )}
+                        </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
         </div>
@@ -265,34 +284,37 @@ export default function Trainers() {
 
       {/* ------------------------------------ EDIT MODAL -------------------------------- */}
       {editingTrainer && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 animate-in fade-in duration-300">
-          <div className="glass-card p-8 rounded-[2.5rem] w-full max-w-lg max-h-[85vh] overflow-y-auto border border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-2xl flex justify-center items-center p-6 z-[100] animate-fade-in">
+          <div className="bg-white p-12 md:p-16 rounded-[4rem] w-full max-w-2xl border border-white shadow-2xl relative overflow-hidden animate-scale-in max-h-[95vh] flex flex-col">
+            
+            <button 
+              onClick={() => setEditingTrainer(null)}
+              className="absolute top-12 right-12 text-slate-300 hover:text-slate-900 transition-all hover:rotate-90 duration-500"
+            >
+               <FaTimes size={28}/>
+            </button>
 
-            <h2 className="text-2xl font-black text-white mb-8 text-center uppercase italic text-shadow-red border-b-2 border-red-600 pb-4 inline-block w-full">
-              Edit Trainer Profile
-            </h2>
+            <div className="text-center mb-12 shrink-0">
+               <div className="inline-flex items-center justify-center w-20 h-20 bg-slate-50 rounded-[2rem] mb-6 text-slate-900 shadow-inner">
+                  <FaEdit size={28}/>
+               </div>
+               <h2 className="text-4xl font-black text-slate-900 uppercase italic tracking-tight leading-none">Modify Credentials</h2>
+               <p className="text-slate-500 font-medium mt-3 uppercase tracking-[0.2em] text-[10px] italic">Update authorized faculty identity parameters.</p>
+            </div>
 
-            {/* Profile Pic */}
-            <div className="flex flex-col items-center mb-8">
+            <div className="flex flex-col items-center mb-12 shrink-0">
                <div className="relative group cursor-pointer">
-                 <div className="absolute inset-0 bg-red-600/20 rounded-full blur-xl scale-110 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-                 <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-white/10 group-hover:border-red-600 transition-all duration-300 shadow-xl">
+                 <div className="w-40 h-40 rounded-[3.5rem] overflow-hidden border-8 border-slate-50 shadow-2xl group-hover:border-blue-100 transition-all duration-700 bg-white">
                     {editingTrainer.profile_pic ? (
-                      <img
-                        src={editingTrainer.profile_pic}
-                        alt={editingTrainer.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={editingTrainer.profile_pic} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"/>
                     ) : (
-                      <div className="w-full h-full bg-slate-900 flex items-center justify-center text-white text-3xl font-black uppercase">
+                      <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-200 text-5xl font-black uppercase italic">
                         {editingTrainer.name?.charAt(0)}
                       </div>
                     )}
                  </div>
-                 <div className="absolute bottom-0 right-0 bg-red-600 text-white p-2 rounded-full shadow-lg border-2 border-[#0f172a]">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
+                 <div className="absolute -bottom-4 -right-4 bg-blue-600 text-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl border-4 border-white group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                    <FaCloudUploadAlt size={24}/>
                  </div>
                  <input
                     type="file"
@@ -305,70 +327,90 @@ export default function Trainers() {
                         ...editingTrainer,
                         profile_pic: uploaded?.secure_url,
                       });
-                      toast.success("Profile picture updated");
+                      toast.success("Identity visual synchronized");
                     }}
                   />
                </div>
-               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-3">Tap to Upload Photo</p>
             </div>
 
-            {/* Form */}
-            <form onSubmit={updateTrainer} className="space-y-5">
+            <form onSubmit={updateTrainer} className="space-y-8 flex-1 overflow-y-auto no-scrollbar pr-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8 italic">Registry Name</label>
+                    <input
+                        className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-slate-900 font-black focus:outline-none focus:ring-8 focus:ring-blue-100 transition-all italic placeholder:text-slate-200"
+                        value={editingTrainer.name}
+                        onChange={(e) => setEditingTrainer({ ...editingTrainer, name: e.target.value })}
+                    />
+                </div>
 
-              <div className="space-y-1">
-                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Name</label>
-                 <input
-                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-red-600 transition-all outline-none"
-                    placeholder="Name"
-                    value={editingTrainer.name}
-                    onChange={(e) =>
-                      setEditingTrainer({ ...editingTrainer, name: e.target.value })
-                    }
-                  />
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8 italic">Secure Comms</label>
+                    <div className="relative">
+                        <input
+                            className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-slate-900 font-black focus:outline-none focus:ring-8 focus:ring-blue-100 transition-all italic placeholder:text-slate-200"
+                            value={editingTrainer.email}
+                            onChange={(e) => setEditingTrainer({ ...editingTrainer, email: e.target.value })}
+                        />
+                        <FaEnvelope className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-200" size={16}/>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8 italic">Mobile Uplink</label>
+                    <div className="relative">
+                        <input
+                            className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-slate-900 font-black focus:outline-none focus:ring-8 focus:ring-blue-100 transition-all italic placeholder:text-slate-200"
+                            value={editingTrainer.phone}
+                            maxLength={10}
+                            onChange={(e) => setEditingTrainer({ ...editingTrainer, phone: e.target.value.replace(/\D/g, "") })}
+                        />
+                        <FaPhone className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-200" size={16}/>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8 italic">Battle Exp.</label>
+                    <div className="relative">
+                        <input
+                            className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-slate-900 font-black focus:outline-none focus:ring-8 focus:ring-blue-100 transition-all italic placeholder:text-slate-200"
+                            value={editingTrainer.experience || ""}
+                            onChange={(e) => setEditingTrainer({ ...editingTrainer, experience: e.target.value })}
+                        />
+                        <FaGlobe className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-200" size={16}/>
+                    </div>
+                </div>
               </div>
 
-              <div className="space-y-1">
-                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Email</label>
-                 <input
-                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-red-600 transition-all outline-none"
-                    placeholder="Email"
-                    value={editingTrainer.email}
-                    onChange={(e) =>
-                      setEditingTrainer({ ...editingTrainer, email: e.target.value })
-                    }
-                  />
+              <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-8 italic">Current Sector</label>
+                  <div className="relative">
+                      <input
+                          className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-slate-900 font-black focus:outline-none focus:ring-8 focus:ring-blue-100 transition-all italic placeholder:text-slate-200"
+                          value={editingTrainer.company || ""}
+                          onChange={(e) => setEditingTrainer({ ...editingTrainer, company: e.target.value })}
+                      />
+                      <FaBriefcase className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-200" size={16}/>
+                  </div>
               </div>
 
-               <div className="space-y-1">
-                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Phone</label>
-                 <input
-                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-red-600 transition-all outline-none"
-                    placeholder="Phone"
-                    value={editingTrainer.phone}
-                    onChange={(e) =>
-                      setEditingTrainer({ ...editingTrainer, phone: e.target.value })
-                    }
-                  />
+              <div className="pt-8">
+                <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="w-full py-8 bg-slate-900 text-white font-black uppercase tracking-[0.4em] text-[11px] rounded-[2.5rem] shadow-[0_30px_70px_rgba(0,0,0,0.2)] hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-4 group"
+                >
+                    {isUpdating ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                        <FaCheckCircle size={18} className="group-hover:rotate-12 transition-transform"/>
+                    )}
+                    {isUpdating ? "Synchronizing Matrix..." : "Commence Authorization Protocol"}
+                </button>
               </div>
-
-            <div className="flex gap-4 mt-8 pt-4 border-t border-white/5">
-              <button
-                type="submit"
-                className="flex-1 py-4 bg-red-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all hover:scale-[1.02]"
-              >
-                Update
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingTrainer(null)}
-                className="flex-1 py-4 bg-white/5 text-slate-400 font-black uppercase tracking-widest text-xs rounded-2xl border border-white/5 hover:bg-white/10 hover:text-white transition-all"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
-      </div>
       )}
     </div>
   );

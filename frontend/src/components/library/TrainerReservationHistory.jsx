@@ -132,7 +132,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/api";
 import { toast } from "react-toastify";
-import { FaBook } from "react-icons/fa";
+import { FaBook, FaCalendarAlt, FaShieldAlt, FaBoxOpen, FaLayerGroup, FaInfoCircle, FaCheckCircle, FaTimesCircle, FaBookOpen } from "react-icons/fa";
 
 export default function TrainerReservationHistory() {
   const [reservations, setReservations] = useState([]);
@@ -144,7 +144,7 @@ export default function TrainerReservationHistory() {
       const { data } = await api.get("/api/library/book/reservation/trainer");
       setReservations(data.reservations || []);
     } catch (err) {
-      toast.error("Failed to load your reservations");
+      toast.error("Systems Failure: Archive retrieval aborted");
     } finally {
       setLoading(false);
     }
@@ -155,154 +155,143 @@ export default function TrainerReservationHistory() {
   }, []);
 
   const handleCancel = async (id) => {
-    if (!window.confirm("Cancel this reservation?")) return;
+    if (!window.confirm("Abort this reservation sequence?")) return;
     try {
       await api.delete(`/api/library/book/reservation/cancel/${id}`);
-      toast.success("Reservation cancelled");
+      toast.success("Protocol: Reservation aborted");
       fetchMyReservations();
     } catch {
-      toast.error("Failed to cancel reservation");
+      toast.error("Protocol Failure: Termination failed");
     }
   };
 
   return (
-    <div className="glass-card p-8 rounded-[2.5rem] mt-5 mb-10 border border-white/10 robust-inset shadow-2xl animate-in fade-in duration-700">
+    <div className="bg-white p-12 lg:p-16 rounded-[4rem] border border-slate-100 shadow-[0_30px_100px_rgba(0,0,0,0.04)] relative overflow-hidden group/card animate-fade-in">
       
-      {/* TITLE */}
-      <h2 className="text-3xl font-black text-white mb-8 text-center text-shadow-red uppercase italic tracking-tight">
-        Reservation Archives
-      </h2>
+      {/* Design Accent */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/50 rounded-full blur-[120px] -mt-48 -mr-48 pointer-events-none transition-colors duration-1000 group-hover/card:bg-blue-100/50"></div>
 
-      {/* EMPTY */}
-      {!loading && reservations.length === 0 && (
-        <p className="text-center py-20 text-slate-400 italic bg-white/5 rounded-2xl border border-white/10">
-          No active reservations found
-        </p>
-      )}
+      <div className="text-center mb-16 relative z-10">
+        <h2 className="text-4xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Reservation Archives</h2>
+        <p className="text-slate-500 font-medium mt-4 uppercase tracking-[0.4em] text-[10px] italic">Reviewing your tactical asset reservation history and status.</p>
+      </div>
 
-      {/* TABLE */}
-      {reservations.length > 0 && (
-        <div className="rounded-[2rem] border border-white/10 overflow-hidden bg-white/5">
-          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full border-collapse text-left">
-              <thead className="bg-[#0f172a] text-slate-500">
-                <tr>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">
-                    Asset
-                  </th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">
-                    Reserved On
-                  </th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">
-                    Expiry
-                  </th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">
-                    Status
-                  </th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-white/5">
-                {reservations.map((res) => (
-                  <tr
-                    key={res._id}
-                    className="hover:bg-white/5 transition-colors"
-                  >
-                    {/* BOOK */}
-                    <td className="p-4 text-center">
-                      <div className="flex items-center gap-3 justify-center">
-                        <div className="w-10 h-14 bg-white/10 rounded flex items-center justify-center overflow-hidden">
-                          {res.book?.coverImage ? (
-                            <img
-                              src={res.book.coverImage}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <FaBook className="text-slate-500" />
-                          )}
-                        </div>
-                        <div className="text-left">
-                          <p className="text-[9px] font-black text-slate-500 uppercase">
-                            {res.book?.category}
-                          </p>
-                          <p className="text-xs font-bold text-white uppercase italic">
-                            {res.book?.title}
-                          </p>
-                          <p className="text-[10px] text-slate-500 font-mono">
-                            {res.book?.isbn}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* RESERVED */}
-                    <td className="p-4 text-center text-[10px] font-mono text-slate-500">
-                      {new Date(
-                        res.reservationDate || res.createdAt
-                      ).toLocaleDateString()}
-                    </td>
-
-                    {/* EXPIRY */}
-                    <td className="p-4 text-center text-[10px] font-mono text-red-500">
-                      {new Date(res.expiryDate).toLocaleDateString()}
-                    </td>
-
-                    {/* STATUS */}
-                    <td className="p-4 text-center">
-                      <span
-                        className={`px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
-                          res.status === "pending"
-                            ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                            : res.status === "fulfilled"
-                            ? "bg-green-500/10 text-green-500 border border-green-500/20"
-                            : "bg-red-500/10 text-red-500 border border-red-500/20"
-                        }`}
-                      >
-                        {res.status}
-                      </span>
-                    </td>
-
-                    {/* ACTION */}
-                    <td className="p-4 text-center">
-                      {res.status === "pending" && (
-                        <button
-                          onClick={() => handleCancel(res._id)}
-                          className="px-4 py-1 text-[9px] font-black uppercase tracking-widest rounded-md
-                                     bg-red-500/10 text-red-500 border border-red-500/20
-                                     hover:bg-red-500 hover:text-white transition-all"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* LOADER */}
-          {loading && (
-            <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-            </div>
-          )}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-24 gap-6 animate-pulse relative z-10">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic">Accessing Archives...</p>
         </div>
       )}
 
-      {/* RULES */}
-      <div className="mt-8 bg-white/5 border border-white/10 p-5 rounded-2xl">
-        <h4 className="font-black text-red-400 mb-3 text-xs uppercase tracking-widest">
-          Reservation Protocol
-        </h4>
-        <ul className="text-[11px] text-slate-400 list-disc ml-5 space-y-1">
-          <li>Maximum <strong>3 active reservations</strong></li>
-          <li>Each book must be from a <strong>unique category</strong></li>
-          <li>Reservations auto-expire after <strong>3 days</strong></li>
+      {!loading && reservations.length === 0 && (
+        <div className="text-center py-32 bg-slate-50 rounded-[4rem] border-2 border-dashed border-slate-100 opacity-50 flex flex-col items-center relative z-10">
+          <FaBoxOpen size={48} className="text-slate-300 mb-8"/>
+          <p className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Archives Clear</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mt-4 italic">NO ACTIVE REQUESTS DETECTED</p>
+        </div>
+      )}
+
+      {reservations.length > 0 && (
+        <div className="relative z-10 h-[500px] overflow-y-auto pr-4 no-scrollbar custom-scrollbar">
+          <table className="w-full text-left border-separate border-spacing-y-4">
+            <thead className="sticky top-0 bg-white z-20">
+              <tr>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Intelligence Asset</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic text-center">Reserved</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic text-center">Expiry</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic text-center">Status</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic text-right">Directives</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {reservations.map((res) => (
+                <tr key={res._id} className="group/row">
+                  <td className="px-8 py-6 bg-slate-50 rounded-l-[2.5rem] group-hover/row:bg-slate-100 transition-colors">
+                    <div className="flex items-center gap-6">
+                      <div className="w-12 h-16 bg-white rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-200 overflow-hidden shadow-sm">
+                        {res.book?.coverImage ? (
+                          <img src={res.book.coverImage} className="w-full h-full object-cover" />
+                        ) : (
+                          <FaBookOpen size={20} />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest italic mb-1">{res.book?.category}</p>
+                        <p className="font-black text-slate-900 text-sm uppercase italic leading-tight truncate tracking-tighter group-hover/row:text-blue-600 transition-colors">{res.book?.title}</p>
+                        <p className="text-[10px] text-slate-400 font-mono mt-1">{res.book?.isbn}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-8 py-6 bg-slate-50 group-hover/row:bg-slate-100 transition-colors text-center">
+                    <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest italic">
+                      {new Date(res.reservationDate || res.createdAt).toLocaleDateString()}
+                    </p>
+                  </td>
+
+                  <td className="px-8 py-6 bg-slate-50 group-hover/row:bg-slate-100 transition-colors text-center">
+                    <p className="text-[10px] font-mono font-bold text-red-500 uppercase tracking-widest italic">
+                      {new Date(res.expiryDate).toLocaleDateString()}
+                    </p>
+                  </td>
+
+                  <td className="px-8 py-6 bg-slate-50 group-hover/row:bg-slate-100 transition-colors text-center">
+                    <span
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest italic ${
+                        res.status === "pending"
+                          ? "bg-amber-50 text-amber-600"
+                          : res.status === "fulfilled"
+                          ? "bg-green-50 text-green-600"
+                          : "bg-red-50 text-red-600"
+                      }`}
+                    >
+                      <div className={`w-1.5 h-1.5 rounded-full ${res.status === "pending" ? "bg-amber-500 animate-pulse" : res.status === "fulfilled" ? "bg-green-500" : "bg-red-500"}`}></div>
+                      {res.status}
+                    </span>
+                  </td>
+
+                  <td className="px-8 py-6 bg-slate-50 rounded-r-[2.5rem] group-hover/row:bg-slate-100 transition-colors text-right">
+                    {res.status === "pending" && (
+                      <button
+                        onClick={() => handleCancel(res._id)}
+                        className="bg-white text-red-600 p-4 rounded-xl border border-red-100 hover:bg-red-600 hover:text-white hover:shadow-xl hover:shadow-red-900/10 transition-all active:scale-90"
+                        title="Abort Sequence"
+                      >
+                        <FaTimesCircle size={14} />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* PROTOCOL OVERLAY */}
+      <div className="mt-12 bg-slate-50 border border-slate-100 p-10 rounded-[3rem] relative overflow-hidden group/rules relative z-10">
+        <div className="flex items-center gap-4 mb-6">
+           <FaShieldAlt className="text-blue-600" size={18}/>
+           <h4 className="font-black text-slate-900 text-xs uppercase tracking-[0.4em] italic">Reservation Protocol</h4>
+        </div>
+        <ul className="grid grid-cols-1 md:grid-cols-3 gap-8">
+           <li className="flex gap-4">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0"></div>
+              <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic leading-relaxed">Maximum of <strong>3 intelligence assets</strong> may be locked simultaneously.</p>
+           </li>
+           <li className="flex gap-4">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0"></div>
+              <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic leading-relaxed">Each asset must belong to a <strong>unique operational category</strong>.</p>
+           </li>
+           <li className="flex gap-4">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0"></div>
+              <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic leading-relaxed">Reservations auto-expire after <strong>72 hours</strong> of inactivity.</p>
+           </li>
         </ul>
+        
+        {/* Visual Accent */}
+        <FaInfoCircle className="absolute -right-8 -bottom-8 text-slate-200 opacity-20 group-hover:scale-110 transition-transform duration-1000" size={120}/>
       </div>
     </div>
   );

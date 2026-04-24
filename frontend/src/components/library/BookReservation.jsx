@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/api";
 import { toast } from "react-toastify";
-import { FaBook } from "react-icons/fa";
+import { FaBook, FaUserCircle, FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaBoxOpen, FaLayerGroup, FaShieldAlt } from "react-icons/fa";
 
 export default function BookReservations() {
   const [reservations, setReservations] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const loadReservations = async () => {
     try {
+      setLoading(true);
       const { data } = await api.get("/api/library/book/reservation/all");
       setReservations(data.reservations || []);
     } catch (err) {
-      toast.error("Failed to load reservations");
+      toast.error("Systems Failure: Reservation retrieval aborted");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -20,117 +24,141 @@ export default function BookReservations() {
   }, []);
 
   return (
-    <div className="glass-card p-8 rounded-[2.5rem] mt-5 mb-10 border border-white/10 robust-inset shadow-2xl animate-in fade-in duration-700">
-      <h2 className="text-3xl font-black text-white mb-8 text-center text-shadow-red uppercase italic tracking-tight">Advanced Reservations</h2>
+    <div className="bg-white p-12 lg:p-16 rounded-[4rem] border border-slate-100 shadow-[0_30px_100px_rgba(0,0,0,0.04)] relative overflow-hidden group/card animate-fade-in">
+      
+      {/* Design Accent */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/50 rounded-full blur-[120px] -mt-48 -mr-48 pointer-events-none transition-colors duration-1000 group-hover/card:bg-blue-100/50"></div>
 
-      <div className="rounded-[2rem] border border-white/10 overflow-hidden bg-white/5">
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-[#0f172a] text-slate-500">
-              <tr>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest">Asset Details</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest">Requester</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">Reserved On</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">Expires</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">Status</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-right">Directives</th>
-              </tr>
-            </thead>
+      <div className="text-center mb-16 relative z-10">
+        <h2 className="text-4xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Advanced Reservations</h2>
+        <p className="text-slate-500 font-medium mt-4 uppercase tracking-[0.4em] text-[10px] italic">Monitor and authorize asset reservation requests from tactical personnel.</p>
+      </div>
 
-            <tbody className="divide-y divide-white/5">
-              {reservations.map((r) => (
-                <tr key={r._id} className="hover:bg-white/5 transition-colors group">
-                  <td className="p-4">
-                    <div className="flex items-center gap-4">
-                      {r.book?.coverImage ? (
-                        <img
-                          src={r.book.coverImage}
-                          className="w-8 h-12 object-cover rounded shadow-sm border border-white/10 group-hover:border-red-500/50 transition-colors"
-                        />
-                      ) : (
-                        <div className="w-8 h-12 flex items-center justify-center bg-slate-800 rounded border border-white/10">
-                             <FaBook className="text-slate-600" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-black text-white text-xs uppercase italic leading-none group-hover:text-red-500 transition-colors">{r.book?.title}</p>
-                        <p className="text-[10px] text-slate-500 font-mono mt-1">{r.book?.isbn}</p>
-                      </div>
-                    </div>
-                  </td>
+      <div className="relative z-10 h-[600px] overflow-y-auto pr-4 no-scrollbar custom-scrollbar">
+        <table className="w-full text-left border-separate border-spacing-y-4">
+          <thead className="sticky top-0 bg-white z-20">
+            <tr>
+              <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Asset Details</th>
+              <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Requester</th>
+              <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic text-center">Reserved</th>
+              <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic text-center">Expires</th>
+              <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic text-center">Status</th>
+              <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic text-right">Directives</th>
+            </tr>
+          </thead>
 
-                  <td className="p-4">
-                    <div className="py-1">
-                      <p className="font-bold text-slate-300 text-xs uppercase tracking-tight">{r.student?.name}</p>
-                      <p className="text-[9px] text-slate-500 font-mono uppercase tracking-widest">{r.student?.email}</p>
-                    </div>
-                  </td>
-
-                  <td className="p-4 text-center text-[10px] font-mono text-slate-400">
-                    {new Date(r.reservationDate).toLocaleDateString()}
-                  </td>
-
-                  <td className="p-4 text-center text-[10px] font-mono text-slate-400">
-                    {new Date(r.expiryDate).toLocaleDateString()}
-                  </td>
-
-                  <td className="p-4 text-center">
-                    <span
-                      className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
-                        r.status === "fulfilled"
-                          ? "bg-green-500/10 text-green-500 border border-green-500/20"
-                          : r.status === "cancelled"
-                          ? "bg-red-500/10 text-red-500 border border-red-500/20"
-                          : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                      }`}
-                    >
-                      {r.status}
-                    </span>
-                  </td>
-
-                  <td className="p-4 text-right">
-                    {r.status === 'pending' && (
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={async () => {
-                            const dueDate = prompt("Enter Due Date (YYYY-MM-DD):", new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-                            if (!dueDate) return;
-                            
-                            try {
-                              await api.post(`/api/library/book/reservation/fulfill/${r._id}`, { dueDate });
-                              toast.success("Book issued successfully");
-                              loadReservations();
-                            } catch (err) {
-                              toast.error(err.response?.data?.message || "Failed to issue");
-                            }
-                          }}
-                          className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-colors shadow-lg shadow-green-500/20"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (!window.confirm("Cancel this reservation?")) return;
-                            try {
-                              await api.delete(`/api/library/book/reservation/cancel/${r._id}`);
-                              toast.success("Reservation cancelled");
-                              loadReservations();
-                            } catch (err) {
-                              toast.error("Failed to cancel");
-                            }
-                          }}
-                          className="bg-red-600/10 text-red-500 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors border border-red-500/20"
-                        >
-                          Reject
-                        </button>
+          <tbody>
+            {reservations.map((r) => (
+              <tr key={r._id} className="group/row">
+                <td className="px-8 py-6 bg-slate-50 rounded-l-[2.5rem] group-hover/row:bg-slate-100 transition-colors">
+                  <div className="flex items-center gap-6">
+                    {r.book?.coverImage ? (
+                      <div className="w-12 h-16 rounded-xl border-2 border-white shadow-xl group-hover/row:scale-110 transition-transform duration-500 bg-cover bg-center" style={{ backgroundImage: `url(${r.book.coverImage})` }}></div>
+                    ) : (
+                      <div className="w-12 h-16 bg-white rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-200">
+                        <FaBook size={20} />
                       </div>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    <div className="min-w-0">
+                      <p className="font-black text-slate-900 text-sm uppercase italic leading-tight truncate tracking-tighter group-hover/row:text-blue-600 transition-colors">{r.book?.title}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">ISBN: {r.book?.isbn}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <td className="px-8 py-6 bg-slate-50 group-hover/row:bg-slate-100 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400">
+                       <FaUserCircle size={20}/>
+                    </div>
+                    <div>
+                       <p className="font-black text-slate-900 text-[11px] uppercase italic tracking-tight">{r.student?.name}</p>
+                       <p className="text-[9px] text-slate-400 font-mono uppercase tracking-widest mt-1">Personnel ID Lock</p>
+                    </div>
+                  </div>
+                </td>
+
+                <td className="px-8 py-6 bg-slate-50 group-hover/row:bg-slate-100 transition-colors text-center">
+                   <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">{new Date(r.reservationDate).toLocaleDateString()}</p>
+                </td>
+
+                <td className="px-8 py-6 bg-slate-50 group-hover/row:bg-slate-100 transition-colors text-center">
+                   <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">{new Date(r.expiryDate).toLocaleDateString()}</p>
+                </td>
+
+                <td className="px-8 py-6 bg-slate-50 group-hover/row:bg-slate-100 transition-colors text-center">
+                  <span
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest italic ${
+                      r.status === "fulfilled"
+                        ? "bg-green-50 text-green-600"
+                        : r.status === "cancelled"
+                        ? "bg-red-50 text-red-600"
+                        : "bg-amber-50 text-amber-600"
+                    }`}
+                  >
+                    <div className={`w-1.5 h-1.5 rounded-full ${r.status === "fulfilled" ? "bg-green-500" : r.status === "cancelled" ? "bg-red-500" : "bg-amber-500 animate-pulse"}`}></div>
+                    {r.status}
+                  </span>
+                </td>
+
+                <td className="px-8 py-6 bg-slate-50 rounded-r-[2.5rem] group-hover/row:bg-slate-100 transition-colors text-right">
+                  {r.status === 'pending' && (
+                    <div className="flex gap-3 justify-end">
+                      <button
+                        onClick={async () => {
+                          const dueDate = prompt("ESTABLISH RETURN CYCLE (YYYY-MM-DD):", new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+                          if (!dueDate) return;
+                          try {
+                            await api.post(`/api/library/book/reservation/fulfill/${r._id}`, { dueDate });
+                            toast.success("Protocol Success: Asset authorized");
+                            loadReservations();
+                          } catch (err) {
+                            toast.error(err.response?.data?.message || "Authorization Failed");
+                          }
+                        }}
+                        className="bg-white text-green-600 p-4 rounded-xl border border-green-100 hover:bg-green-600 hover:text-white hover:shadow-xl hover:shadow-green-900/10 transition-all active:scale-90"
+                        title="Authorize Deployment"
+                      >
+                        <FaCheckCircle size={14} />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm("Abort this reservation sequence?")) return;
+                          try {
+                            await api.delete(`/api/library/book/reservation/cancel/${r._id}`);
+                            toast.success("Protocol: Reservation aborted");
+                            loadReservations();
+                          } catch (err) {
+                            toast.error("Protocol Failure: Termination failed");
+                          }
+                        }}
+                        className="bg-white text-red-600 p-4 rounded-xl border border-red-100 hover:bg-red-600 hover:text-white hover:shadow-xl hover:shadow-red-900/10 transition-all active:scale-90"
+                        title="Abort Sequence"
+                      >
+                        <FaTimesCircle size={14} />
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {loading && (
+           <div className="flex flex-col items-center justify-center py-24 gap-6 animate-pulse">
+             <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic">Accessing Requests...</p>
+           </div>
+        )}
+        
+        {!loading && reservations.length === 0 && (
+          <div className="text-center py-32 bg-slate-50 rounded-[4rem] border-2 border-dashed border-slate-100 opacity-50 flex flex-col items-center">
+            <FaBoxOpen size={48} className="text-slate-300 mb-8"/>
+            <p className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Reservations Clear</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mt-4 italic">NO ACTIVE REQUESTS DETECTED</p>
+          </div>
+        )}
       </div>
     </div>
   );
