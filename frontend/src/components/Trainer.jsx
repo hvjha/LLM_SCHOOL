@@ -40,7 +40,7 @@ export default function Trainers() {
 
     try {
       await api.delete(`/api/admin/delete/${id}`);
-      toast.success("Personnel record expunged");
+      toast.success("Personnel record deleted");
       loadTrainers();
     } catch (err) {
       toast.error("Protocol failure: Deletion rejected");
@@ -269,7 +269,7 @@ export default function Trainers() {
                             <button
                                 className="w-14 h-14 bg-white text-slate-300 rounded-2xl flex items-center justify-center border border-slate-100 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all shadow-sm group/btn"
                                 onClick={() => deleteTrainer(trainer._id)}
-                                title="Expunge Personnel"
+                                title="Delete Personnel"
                             >
                                 <FaTrashAlt size={18} className="group-hover/btn:scale-110 transition-transform"/>
                             </button>

@@ -294,7 +294,7 @@ export default function Auth() {
                      />
                      <div className="flex gap-4">
                        <button onClick={verifyAnswer} className="flex-1 py-5 bg-blue-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-[11px] hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20">Authorize</button>
-                       <button onClick={() => setShowForgot(false)} className="px-8 py-5 text-slate-400 font-black uppercase tracking-widest text-[11px] hover:text-slate-900 transition-colors">Abort</button>
+                       <button onClick={() => setShowForgot(false)} className="px-8 py-5 text-slate-400 font-black uppercase tracking-widest text-[11px] hover:text-slate-900 transition-colors">Cancel</button>
                      </div>
                    </div>
 

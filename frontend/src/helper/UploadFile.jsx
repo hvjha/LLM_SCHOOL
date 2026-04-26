@@ -73,7 +73,7 @@ const uploadFile = async (file, onProgress) => {
     });
 
     xhr.addEventListener("abort", () => {
-      reject(new Error("Upload aborted"));
+      reject(new Error("Upload canceled"));
     });
 
     xhr.open("POST", uploadUrl);

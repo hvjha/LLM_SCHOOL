@@ -40,10 +40,10 @@ export default function ManageUploadedContent() {
     if (!confirm("Confirm Protocol: Permanent deletion of classified record?")) return;
     try {
       await api.delete(`/api/content/delete/${id}`);
-      toast.success("Intelligence record expunged");
+      toast.success("Intelligence record deleted");
       loadAll();
     } catch (err) {
-      toast.error("Systems failure: Deletion protocol aborted");
+      toast.error("Systems failure: Deletion protocol failed");
     }
   };
 
@@ -126,7 +126,7 @@ export default function ManageUploadedContent() {
                           className="w-full py-4 bg-white border border-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-500 flex items-center justify-center gap-3 active:scale-95 shadow-sm"
                           onClick={() => deleteItem(v._id)}
                         >
-                          <FaTrashAlt size={12}/> Expunge
+                          <FaTrashAlt size={12}/> Delete
                         </button>
                     </div>
                     ))}
@@ -166,7 +166,7 @@ export default function ManageUploadedContent() {
                           className="w-full py-4 bg-white border border-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-500 flex items-center justify-center gap-3 active:scale-95 shadow-sm"
                           onClick={() => deleteItem(d._id)}
                         >
-                          <FaTrashAlt size={12}/> Expunge
+                          <FaTrashAlt size={12}/> Delete
                         </button>
                     </div>
                     ))}

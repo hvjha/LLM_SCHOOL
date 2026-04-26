@@ -474,7 +474,7 @@ export default function TrainerDashboard() {
                       onClick={() => { setAttendanceModalData(null); setWeekendError(""); }}
                       className="w-full py-4 text-slate-400 font-black uppercase tracking-[0.3em] hover:text-slate-900 transition-all text-xs"
                     >
-                      Abort Operation
+                      Cancel Operation
                     </button>
                   </div>
                 </div>

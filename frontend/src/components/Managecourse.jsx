@@ -83,10 +83,10 @@ export default function ManageCourses({ onCourseUpdated }) {
     if (!confirm("Confirm Protocol: Permanent deletion of curriculum track?")) return;
     try {
       await api.delete(`/api/course/delete-course/${id}`);
-      toast.success("Curriculum track expunged");
+      toast.success("Curriculum track deleted");
       loadCourses();
     } catch (err) {
-      toast.error("Systems failure: Deletion protocol aborted");
+      toast.error("Systems Failure: Data synchronization failed");
     }
   };
 

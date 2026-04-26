@@ -27,14 +27,14 @@ export default function ManageBooks() {
   }, []);
 
   const deleteBook = async (bookId) => {
-    if (!window.confirm("Confirm Protocol: Permanent expungement of intelligence record?")) return;
+    if (!window.confirm("Confirm Protocol: Permanent deletion of intelligence record?")) return;
 
     try {
       await api.delete(`/api/library/book/delete/${bookId}`);
-      toast.success("Intelligence record expunged");
+      toast.success("Intelligence record deleted");
       loadBooks();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Expungement failed");
+      toast.error(err?.response?.data?.message || "Deletion failed");
     }
   };
 
@@ -151,7 +151,7 @@ export default function ManageBooks() {
                     <button
                       className="p-4 bg-white text-slate-400 rounded-xl hover:text-red-600 hover:shadow-xl hover:shadow-red-900/10 transition-all border border-slate-100 active:scale-90"
                       onClick={() => deleteBook(b._id)}
-                      title="Purge Record"
+                      title="Delete Record"
                     >
                       <FaTrashAlt size={14} />
                     </button>
@@ -241,7 +241,7 @@ export default function ManageBooks() {
                 className="flex-1 py-6 bg-slate-50 text-slate-400 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.4em] italic hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95"
                 onClick={() => setEditBook(null)}
               >
-                Abort Protocol
+                Cancel Update
               </button>
               <button
                 className="flex-1 py-6 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.4em] italic hover:bg-blue-600 shadow-2xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-4 group"

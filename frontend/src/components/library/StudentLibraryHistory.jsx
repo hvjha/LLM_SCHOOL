@@ -15,7 +15,7 @@ export default function StudentLibraryHistory({ studentId }) {
         const { data } = await api.get(`/api/library/history/student/${studentId}`);
         setHistory(data.history || []);
       } catch (err) {
-        toast.error(err.response?.data?.message || "Systems Failure: History retrieval aborted");
+        toast.error(err.response?.data?.message || "Systems Failure: History retrieval failed");
       } finally {
         setLoading(false);
       }

@@ -3,7 +3,6 @@ import { FaGraduationCap } from "react-icons/fa";
 
 export default function LoadingScreen() {
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-md">
     <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-slate-50/90 backdrop-blur-3xl">
       <div className="relative mb-12">
         <div className="w-32 h-32 rounded-[3rem] bg-blue-600 flex items-center justify-center text-white shadow-2xl shadow-blue-500/30 animate-pulse">

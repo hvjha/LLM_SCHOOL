@@ -26,7 +26,7 @@ export default function IssueBooks() {
       const trainers = data?.users?.trainers || [];
       setUsers([...students, ...trainers]);
     } catch {
-      toast.error("Systems Failure: User retrieval aborted");
+      toast.error("Systems Failure: User retrieval failed");
     }
   };
 
@@ -44,7 +44,7 @@ export default function IssueBooks() {
       const { data } = await api.get("/api/library/book/books");
       setBooks(data.books || []);
     } catch {
-      toast.error("Systems Failure: Asset retrieval aborted");
+      toast.error("Systems Failure: Asset retrieval failed");
     }
   };
 

@@ -13,7 +13,7 @@ export default function BookReservations() {
       const { data } = await api.get("/api/library/book/reservation/all");
       setReservations(data.reservations || []);
     } catch (err) {
-      toast.error("Systems Failure: Reservation retrieval aborted");
+      toast.error("Systems Failure: Reservation retrieval failed");
     } finally {
       setLoading(false);
     }
@@ -123,17 +123,17 @@ export default function BookReservations() {
                       </button>
                       <button
                         onClick={async () => {
-                          if (!window.confirm("Abort this reservation sequence?")) return;
+                          if (!window.confirm("Cancel this reservation?")) return;
                           try {
                             await api.delete(`/api/library/book/reservation/cancel/${r._id}`);
-                            toast.success("Protocol: Reservation aborted");
+                            toast.success("Protocol: Reservation canceled");
                             loadReservations();
                           } catch (err) {
                             toast.error("Protocol Failure: Termination failed");
                           }
                         }}
                         className="bg-white text-red-600 p-4 rounded-xl border border-red-100 hover:bg-red-600 hover:text-white hover:shadow-xl hover:shadow-red-900/10 transition-all active:scale-90"
-                        title="Abort Sequence"
+                        title="Cancel Reservation"
                       >
                         <FaTimesCircle size={14} />
                       </button>

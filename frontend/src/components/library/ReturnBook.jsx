@@ -20,7 +20,7 @@ export default function ReturnBooksAdmin() {
         const { data } = await api.get("/api/admin/user-details");
         setStudents(data?.users?.students || []);
       } catch {
-        toast.error("Systems Failure: Personnel retrieval aborted");
+        toast.error("Systems Failure: Personnel retrieval failed");
       }
     };
     loadStudents();
@@ -82,10 +82,10 @@ export default function ReturnBooksAdmin() {
           await api.post("/api/fine/pay", { issueIds: selectedIssues, paymentMode, transactionId: null });
         } else if (paymentMode === "online") {
           const res = await loadRazorpayScript();
-          if (!res) return toast.error("Razorpay SDK Failure: Digital transfer aborted");
+          if (!res) return toast.error("Razorpay SDK Failure: Digital transfer failed");
           
           const { data: orderData } = await api.post("/api/fine/create-order", { amount: selectedFine, issueIds: selectedIssues });
-          if (!orderData.success) return toast.error("Order Failure: Digital sequence aborted");
+          if (!orderData.success) return toast.error("Order Failure: Digital sequence failed");
 
           if (orderData.isMock) {
             toast.info("Mock Sequence: Simulating digital verification...");
@@ -130,7 +130,7 @@ export default function ReturnBooksAdmin() {
       }
       await proceedWithReturn();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Protocol Failure: Asset recovery aborted");
+      toast.error(err.response?.data?.message || "Protocol Failure: Asset recovery failed");
     } finally {
       setIsProcessing(false);
     }

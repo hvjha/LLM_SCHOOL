@@ -189,7 +189,7 @@ export default function StudentAttendance() {
     if (!window.confirm("Confirm Protocol: Permanent deletion of record?")) return;
     try {
       await api.delete(`/api/attendance/${attendanceId}`);
-      toast.success("Record expunged");
+      toast.success("Record deleted");
       fetchAttendanceData();
     } catch (err) {
       toast.error(err.response?.data?.message || "Protocol Failure: Deletion rejected");
@@ -462,6 +462,31 @@ export default function StudentAttendance() {
                       <th className="px-12 py-10 text-[10px] font-black uppercase tracking-[0.4em] italic text-center">Verification Status</th>
                       <th className="px-12 py-10 text-[10px] font-black uppercase tracking-[0.4em] italic">Validation Authority</th>
                       {canEdit && <th className="px-12 py-10 text-[10px] font-black uppercase tracking-[0.4em] italic text-center">Protocol</th>}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {filteredAttendance.map((record) => (
+                      <tr key={record._id} className="group hover:bg-slate-50 transition-colors duration-500">
+                        <td className="px-12 py-10">
+                          <div className="flex items-center gap-6">
+                             <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 group-hover:text-blue-600 group-hover:border-blue-100 transition-all shadow-sm">
+                                <FaCalendarAlt size={16}/>
+                             </div>
+                             <div>
+                                <div className="text-slate-900 font-black text-sm uppercase italic leading-none group-hover:text-blue-600 transition-colors">{formatDate(record.date)}</div>
+                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em] mt-2 italic">Sync Cycle</p>
+                             </div>
+                          </div>
+                        </td>
+                        <td className="px-12 py-10">
+                           <div className="flex items-center gap-6">
+                             <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 group-hover:text-blue-600 group-hover:border-blue-100 transition-all shadow-sm">
+                                <FaTable size={16}/>
+                             </div>
+                             <div>
+                                <div className="text-slate-900 font-black text-sm uppercase italic leading-none group-hover:text-blue-600 transition-colors">{record.course?.name}</div>
+                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em] mt-2 italic">Track ID: {record.course?.courseId}</p>
+                             </div>
                           </div>
                         </td>
                         <td className="px-12 py-10">

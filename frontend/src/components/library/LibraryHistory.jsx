@@ -15,7 +15,7 @@ export default function LibraryHistory() {
       setHistory(data.report || []);
       setSummary(data.summary || null);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Systems Failure: History retrieval aborted");
+      toast.error(err?.response?.data?.message || "Systems Failure: History retrieval failed");
     } finally {
       setLoading(false);
     }

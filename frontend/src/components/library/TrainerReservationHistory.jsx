@@ -144,7 +144,7 @@ export default function TrainerReservationHistory() {
       const { data } = await api.get("/api/library/book/reservation/trainer");
       setReservations(data.reservations || []);
     } catch (err) {
-      toast.error("Systems Failure: Archive retrieval aborted");
+      toast.error("Systems Failure: Archive retrieval failed");
     } finally {
       setLoading(false);
     }
@@ -155,10 +155,10 @@ export default function TrainerReservationHistory() {
   }, []);
 
   const handleCancel = async (id) => {
-    if (!window.confirm("Abort this reservation sequence?")) return;
+    if (!window.confirm("Cancel this reservation?")) return;
     try {
       await api.delete(`/api/library/book/reservation/cancel/${id}`);
-      toast.success("Protocol: Reservation aborted");
+      toast.success("Protocol: Reservation canceled");
       fetchMyReservations();
     } catch {
       toast.error("Protocol Failure: Termination failed");
@@ -256,7 +256,7 @@ export default function TrainerReservationHistory() {
                       <button
                         onClick={() => handleCancel(res._id)}
                         className="bg-white text-red-600 p-4 rounded-xl border border-red-100 hover:bg-red-600 hover:text-white hover:shadow-xl hover:shadow-red-900/10 transition-all active:scale-90"
-                        title="Abort Sequence"
+                        title="Cancel Reservation"
                       >
                         <FaTimesCircle size={14} />
                       </button>

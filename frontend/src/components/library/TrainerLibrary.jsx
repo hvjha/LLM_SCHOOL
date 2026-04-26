@@ -24,7 +24,7 @@ export default function TrainerLibrary() {
       const { data: resData } = await api.get("/api/library/book/reservation/trainer");
       setMyReservations(resData.reservations || []);
     } catch (err) {
-      toast.error("Systems Failure: Data synchronization aborted");
+      toast.error("Systems Failure: Data synchronization failed");
     } finally {
       setLoading(false);
     }

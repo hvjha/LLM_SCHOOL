@@ -183,7 +183,7 @@ export default function LoggedInStudentDashboard() {
                     <h1 className="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
                        System Entry: <span className="text-blue-600">{user?.name?.split(' ')[0]}</span>
                     </h1>
-                    <p className="text-slate-500 text-lg font-medium italic">Synchronizing academic records and professional parameters...</p>
+                    <p className="text-slate-500 text-lg font-medium italic">Updating your academic and career details...</p>
                  </div>
                  
                  <div className="flex items-center gap-4">
@@ -208,7 +208,7 @@ export default function LoggedInStudentDashboard() {
                    </div>
                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Active Tracks</p>
                    <p className="text-7xl font-black text-white tracking-tighter italic relative z-10 leading-none">{courses.length}</p>
-                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-6 relative z-10">Real-time engagement synchronization active.</p>
+                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-6 relative z-10">Updated in real-time.</p>
                 </div>
                 
                 <div className="p-10 bg-white border border-slate-100 rounded-[3.5rem] shadow-xl shadow-slate-200/40 relative overflow-hidden group">
@@ -224,7 +224,7 @@ export default function LoggedInStudentDashboard() {
                    </div>
                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Elite Mentors</p>
                    <p className="text-7xl font-black text-slate-900 tracking-tighter italic relative z-10 leading-none">{trainers.length}</p>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-6 relative z-10">Direct uplink to faculty directory established.</p>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-6 relative z-10">Direct access to mentors.</p>
                 </div>
               </div>
 
@@ -232,7 +232,7 @@ export default function LoggedInStudentDashboard() {
                 <div className="absolute top-0 left-0 w-2 h-20 bg-blue-600 rounded-full mt-16 -ml-[1px]"></div>
                 <div className="mb-12">
                    <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tight mb-2">Profile Parameters</h2>
-                   <p className="text-slate-400 font-medium italic">Adjust your global identity settings here.</p>
+                   <p className="text-slate-400 font-medium italic">Update your personal details here.</p>
                 </div>
                 <UserProfileCard
                   user={user}
@@ -308,7 +308,7 @@ export default function LoggedInStudentDashboard() {
                     <h1 className="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
                        Knowledge <span className="text-blue-600">Base</span>
                     </h1>
-                    <p className="text-slate-500 text-lg font-medium italic">Synchronizing all encrypted course materials and broadcast streams...</p>
+                    <p className="text-slate-500 text-lg font-medium italic">Access all course materials and videos here...</p>
                  </div>
               </header>
 
@@ -365,7 +365,7 @@ export default function LoggedInStudentDashboard() {
                              CURRENT NODE: {selectedCourse.courseId}
                           </div>
                           <h2 className="text-5xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">{selectedCourse.name}</h2>
-                          <p className="text-slate-400 font-medium italic text-lg">Selective data synchronization initialized...</p>
+                          <p className="text-slate-400 font-medium italic text-lg">Loading content...</p>
                        </div>
                        
                        <div className="flex flex-wrap gap-4">
@@ -443,7 +443,7 @@ export default function LoggedInStudentDashboard() {
                                  <div className="flex-1 rounded-[2.5rem] overflow-hidden border-8 border-slate-50 shadow-2xl bg-white group-hover:border-blue-50 transition-colors relative min-h-[350px]">
                                     <Suspense fallback={<div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 space-y-4">
                                        <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
-                                       <p className="text-slate-400 font-black text-[9px] uppercase tracking-widest">Synchronizing PDF Stream...</p>
+                                       <p className="text-slate-400 font-black text-[9px] uppercase tracking-widest">Loading document...</p>
                                     </div>}>
                                       <PDFViewer url={d.file_url} />
                                     </Suspense>
@@ -459,7 +459,7 @@ export default function LoggedInStudentDashboard() {
                         <div className="py-32 text-center">
                            <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-slate-200 mx-auto mb-10 shadow-inner"><FaFolderOpen size={48}/></div>
                            <h3 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter mb-4">Repository Locked</h3>
-                           <p className="text-slate-400 font-medium italic text-lg max-w-sm mx-auto">Select a data directory from the toggle menu above to initiate access.</p>
+                           <p className="text-slate-400 font-medium italic text-lg max-w-sm mx-auto">Select a folder above to see content.</p>
                         </div>
                       )}
                     </div>
@@ -484,5 +484,5 @@ export default function LoggedInStudentDashboard() {
   );
 }
 
-}
+
 

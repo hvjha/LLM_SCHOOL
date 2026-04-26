@@ -39,7 +39,7 @@ export default function Students() {
     if (!window.confirm("Confirm Protocol: Permanent deletion of cadet record?")) return;
     try {
       await api.delete(`/api/admin/delete/${id}`);
-      toast.success("Cadet record expunged");
+      toast.success("Cadet record deleted");
       await loadStudents();
     } catch (err) {
       toast.error("Protocol Failure: Deletion rejected");
@@ -202,7 +202,7 @@ export default function Students() {
                   onClick={() => deleteStudent(s._id)}
                   className="flex-1 h-14 bg-white text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl border border-slate-100 shadow-sm hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 group/btn"
                 >
-                  <FaTrashAlt className="group-hover/btn:scale-110 transition-transform" size={14}/> Expunge
+                  <FaTrashAlt className="group-hover/btn:scale-110 transition-transform" size={14}/> Delete
                 </button>
               </div>
             </div>
